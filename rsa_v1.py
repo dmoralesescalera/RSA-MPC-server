@@ -710,9 +710,3 @@ pre_runtime = create_runtime(id, players, 1, options, runtime_class)
 pre_runtime.addCallback(Protocol)
 
 reactor.run()	
-
-f = open("file_test.txt", "r")
-data = f.read()
-print data
-return data
-
