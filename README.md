@@ -8,4 +8,4 @@ VIFF:
 http://viff.dk/
 
 # Funcionamiento
-"rsa_server.py" llama a "rsa_gen_key.py" o a "rsa_sign.py"
+"rsa_server.py" llama a "rsa_create_key.py" o a "rsa_sign.py"
