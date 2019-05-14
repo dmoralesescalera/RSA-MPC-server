@@ -7,7 +7,9 @@ import time
 
 import asn1
 import binascii
+from binascii import hexlify, unhexlify
 import subprocess
+import socket
 
 from optparse import OptionParser
 from twisted.internet import reactor
@@ -21,7 +23,7 @@ from viff.equality import ProbabilisticEqualityMixin
 
 class Protocol:
 	
-	def menu(self):
+	def menu(self, serversocket):
 		
 		print "### Reinicializacion de parametros metricos ###"
 		self.time1 = time.clock()
@@ -35,39 +37,50 @@ class Protocol:
 		self.decrypt_tries = 0
 		self.prime_pointer = 0
 		self.function_count = [0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0]
-		
+
+	
 		if self.runtime.id == 1:
-			print "****** MENU ******"
-			print "1. Generar par de claves"
-			print "2. Descifrar numero"
-			print "3. Exportar clave publica"
-			print "4. Inicializar clave test de 1024"
-			print "5. Cerrar aplicacion"
-		
-			m_inp = int(raw_input("Opcion: "))
+			print "Esperando al cliente"
+			(clientsocket, address) = self.serversocket.accept()
+			m_inp = clientsocket.recv(1)
+			m_inp = int(m_inp)
+			clientsocket.close()
+
+			print "Opcion del cliente recibida " + str(m_inp)
 			opt = self.runtime.input([1], self.Zp, m_inp)
 			
 		elif self.runtime.id == 2 or self.runtime.id == 3:
+			clientsocket = None
 			opt = self.runtime.input([1], self.Zp, None)
-				
+
+		
 		open_opt = self.runtime.open(opt)
 		res = gather_shares([open_opt])
 		res.addCallback(self.compare)
 		
+
 	def compare(self, res):
+		# 1 - Generar par de claves
+		# 2 - Descifrar valor
+		# 3 - Exportar clave publica
+		# 4 - Inicializar clave de test
+		# 5 - Calcular firma
+		# 6 - Cerrar aplicacion
+
 		print "res: " + str(res[0].value)
-		
-		if res[0].value == 1:
+		if res[0].value == 1:		
 			self.generate_p()
 		elif res[0].value == 2:
-			
+				
 			if self.runtime.id == 1:
 				cipher = int(raw_input("Ciphertext: "))
 				print "--- Cipher: " + str(cipher)
 				s_cipher = self.runtime.input([1], self.Zp, cipher)
+				print "Secreto compartido"
 			elif self.runtime.id == 2 or self.runtime.id == 3:
 				s_cipher = self.runtime.input([1], self.Zp, None)
-			
+				print "Secreto compartido"
+				
 			open_cipher = self.runtime.open(s_cipher)
 			res = gather_shares([open_cipher])		
 			res.addCallback(self.decryption)
@@ -75,7 +88,7 @@ class Protocol:
 		elif res[0].value == 3:
 			self.exportar_publica(self.n_revealed, self.e)
 		elif res[0].value == 4:
-				
+					
 			self.n_revealed = 41390079002494078641986046594756630633536687083810345842165958685749545845549743206906513923721309424768481639872884020091233166852741072377087919659128560724348790944983497593961170292285935781796243685914588617411257018896128946089092549209449415464825386337427886653329527815270194575854043433510527685809
 			self.e = 65537
 			if self.runtime.id == 1:
@@ -93,13 +106,37 @@ class Protocol:
 				self.q = 1769117262185798563587102984628255369171018063499004246611430490843566727302628693568655146013614407244487802851503509019508792065506277474282556101505948
 				self.l = 14463
 				self.d = 2174903036910656123071925212574860613707020922462720158097810033788436539942746678375774286622445761337488613769151752665542185269810537384957275341438978
-		
-			self.menu()
-		elif res[0].value == 5:
+			
+			if self.runtime.id == 1:		
+				self.menu(self.serversocket)
+			else:
+				self.menu(None)
+		elif res[0].value == 5:	
+
+			# Recibir el hash sha256 como Integer		
+			if self.runtime.id == 1:
+				hash_value = clientsocket.recv(80)
+				clientsocket.close()
+				#hash_value = 12341234
+				print("Hash: " + hash_value)
+				s_hash = self.runtime.input([1], self.Zp, hash_value)
+				print "Secreto compartido"
+			elif self.runtime.id == 2 or self.runtime.id == 3:
+				s_hash = self.runtime.input([1], self.Zp, None)
+				print "Secreto compartido"
+				
+			open_hash = self.runtime.open(s_hash)
+			res = gather_shares([open_hash])		
+			res.addCallback(self.signature)		
+							
+		elif res[0].value == 6:
 			self.runtime.shutdown()
 		else:
 			print "<<error opcion menu>>"
-			self.menu()	
+			if self.runtime.id == 1:		
+				self.menu(self.serversocket)
+			else:
+				self.menu(None)
 
 	def exportar_publica(self, N, e):
 		print "## EXPORTANDO CLAVE PUBLICA ##"
@@ -108,7 +145,7 @@ class Protocol:
 			args = "python pub_key_encoder.py " + str(N) + " " + str(e)
 			p = subprocess.call(args, shell=True)
 			
-		self.menu()
+		self.menu(None)
 
 	def get_primes(self, min, max):
 		primes = []
@@ -450,14 +487,11 @@ class Protocol:
 		cyphertext = int(pow(base, power, modulus))
 		print "cypher = " + str(cyphertext)
 		
-		#
-		f = open("file_test.txt", "w+")
-		f.write(cyphertext)
-		f.close()
-		#
-
 		#self.decryption(cyphertext)
-		self.menu()
+		if self.runtime.id == 1:		
+			self.menu(self.serversocket)
+		else:
+			self.menu(None)
 		
 		
 	def check_decrypt(self, results):
@@ -564,10 +598,11 @@ class Protocol:
 					self.m = ord(cadena)
 					print ">> MENSAJE EN ENTERO: " + str(self.m)
 					self.encryption(self.m)
-					#self.menu()
+					#self.menu(None)
 					return
 															
 	def decryption(self, ciphertext):
+		print "Decryption"
 		ciphertext = ciphertext[0].value
 		
 		if self.runtime.id == 1:
@@ -595,14 +630,20 @@ class Protocol:
 	def check_decryption(self, results):
 		message = results[0].value % self.n_revealed
 		print "\nDecryption of ciphertext yields M = " + str(message)
-		self.menu()
+		if self.runtime.id == 1:		
+			self.menu(self.serversocket)
+		else:
+			self.menu(None)
 		
 	def signature(self, message):
+		print "Entra en signature"
+		message = message[0].value
+
 		if self.runtime.id == 1:
 			message = gmpy.divm(1, message, self.n_revealed)
 		
 		base = gmpy.mpz(message)
-		
+
 		if self.runtime.id == 1:
 			power = gmpy.mpz(-self.d)
 		else:
@@ -610,6 +651,7 @@ class Protocol:
 			
 		modulus = gmpy.mpz(self.n_revealed)
 		c_i = int(pow(base, power, modulus))
+		print "c_i = " + str(c_i)
 		
 		c1, c2, c3 = self.runtime.shamir_share([1, 2, 3], self.Zp, c_i)
 		c_tot = c1 * c2 * c3
@@ -621,6 +663,10 @@ class Protocol:
 	def check_signature(self, results):
 		signature = results[0].value % self.n_revealed
 		print "\nSignature for message M is C = " + str(signature)
+		if self.runtime.id == 1:
+			self.menu(self.serversocket)
+		else:
+			self.menu(None)
 		
 	def __init__(self, runtime):
 		
@@ -630,7 +676,7 @@ class Protocol:
 		self.rounds = 1
 		self.decrypt_benchmark_active = True
 		self.decrypt_rounds = 1
-		self.bits_N = 1024
+		self.bits_N = 32
 		self.m = 2
 		self.cyphertext = 0
 		self.bound1 = 12
@@ -690,10 +736,17 @@ class Protocol:
 		
 		self.Zp = GF(find_prime(2**(l + 1) + 2**(l + k + 1), blum = True))
 		
-		print self.Zp.modulus
+		#print self.Zp.modulus
 		
-		#if self.runtime.id == 1:
-		self.menu()
+		# Si soy el player1, inicializo el socket para recibir instrucciones de clientes
+		if self.runtime.id == 1:
+			self.serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			self.serversocket.bind(('127.0.0.1', 5001))
+			self.serversocket.listen(10)			
+			print "ServerSocket escuchando"
+			self.menu(self.serversocket)
+		else:
+			self.menu(None)
 		
 
 parser = OptionParser()
