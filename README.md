@@ -6,3 +6,6 @@ https://www.researchgate.net/publication/266524261_Realizing_Distributed_RSA_usi
 
 VIFF:
 http://viff.dk/
+
+# Funcionamiento
+"rsa_server.py" llama a "rsa_gen_key.py" o a "rsa_sign.py"
