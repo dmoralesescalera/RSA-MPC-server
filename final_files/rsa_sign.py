@@ -80,9 +80,6 @@ class Protocol:
 		results = gather_shares([open_c_tot])
 		results.addCallback(self.check_signature)
 		
-
-	def print_msg(self, results):
-		print "\nSe ha manejado el error del Deferred"
 	
 	def check_signature(self, results):
 		self.signature = results[0].value % self.n_revealed
@@ -104,7 +101,7 @@ class Protocol:
 		self.rounds = 1
 		self.decrypt_benchmark_active = True
 		self.decrypt_rounds = 1
-		self.bits_N = 64
+		self.bits_N = 1024
 		self.m = 2
 		self.cyphertext = 0
 		self.bound1 = 12

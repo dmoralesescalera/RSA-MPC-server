@@ -47,7 +47,7 @@ class Protocol:
 		print "## FIN EXPORTAR PARAMETROS ##"
 		self.export_public()
 
-	'''
+	
 	def export_public(self):
 		print "## EXPORTANDO CLAVE PUBLICA ##"
 		if self.runtime.id == 1:
@@ -63,7 +63,7 @@ class Protocol:
 			p = Popen(args, shell=True)
 			p.wait()
 		self.runtime.shutdown()
-
+	'''
 
 	def get_primes(self, min, max):
 		primes = []
@@ -508,7 +508,7 @@ class Protocol:
 		self.rounds = 1
 		self.decrypt_benchmark_active = True
 		self.decrypt_rounds = 1
-		self.bits_N = 64
+		self.bits_N = 1024
 		self.m = 2
 		self.cyphertext = 0
 		self.bound1 = 12
