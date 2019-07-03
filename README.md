@@ -10,4 +10,4 @@ The objective of this contribution is to provide a test environment, wich can be
 
 ## Architecture
 
-(https://raw.githubusercontent.com/dmoralesescalera/RSA-MPC-server/)
+(https://raw.githubusercontent.com/dmoralesescalera/RSA-MPC-server/pics/Arquitectura-Arquitectura general.jpeg)
