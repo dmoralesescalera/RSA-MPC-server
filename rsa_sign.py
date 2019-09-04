@@ -86,10 +86,10 @@ class Protocol:
 		self.signature = results[0].value % self.n_revealed
 		print "\nSignature for message M is C = " + str(self.signature)	
 		
-		
-		args = "python file-writer.py " + "./key" + sys.argv[2] + "/buffer.txt" + " " + str(self.signature) + " " + "cadena_basura"
-		p = Popen(args, shell=True)
-		p.wait()
+		file_name = "./key" + sys.argv[2] + "/buffer.txt"
+		f = open(file_name, "w+")
+		f.write(str(self.signature) + "\n")
+		f.close()
 
 		self.runtime.shutdown()
 		
