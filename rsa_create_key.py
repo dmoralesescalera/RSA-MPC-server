@@ -29,19 +29,25 @@ class Protocol:
 		# Guardar parametros de las claves en ficheros
 			
 		if self.runtime.id == 1:
-			args = "python file-writer.py " + sys.argv[2] + "/values-1.txt " + str(self.n_revealed) + " " + str(self.d)	
-			p = Popen(args, shell=True)
-			p.wait()
+			file_name = sys.argv[2] + "/values-1.txt"
+			f = open(file_name, "w+")
+			f.write(str(self.n_revealed) + "\n")
+			f.write(str(self.d) + "\n")
+			f.close()
 
 		elif self.runtime.id == 2:
-			args = "python file-writer.py " + sys.argv[2] + "/values-2.txt " + str(self.n_revealed) + " " + str(self.d)	
-			p = Popen(args, shell=True)
-			p.wait()
+			file_name = sys.argv[2] + "/values-2.txt"
+			f = open(file_name, "w+")
+			f.write(str(self.n_revealed) + "\n")
+			f.write(str(self.d) + "\n")
+			f.close()
 
 		elif self.runtime.id == 3:
-			args = "python file-writer.py " + sys.argv[2] + "/values-3.txt " + str(self.n_revealed) + " " + str(self.d)	
-			p = Popen(args, shell=True)
-			p.wait()
+			file_name = sys.argv[2] + "/values-3.txt"
+			f = open(file_name, "w+")
+			f.write(str(self.n_revealed) + "\n")
+			f.write(str(self.d) + "\n")
+			f.close()
 
 		#
 		print "## FIN EXPORTAR PARAMETROS ##"
@@ -50,10 +56,9 @@ class Protocol:
 	
 	def export_public(self):
 		print "## EXPORTANDO CLAVE PUBLICA ##"
-		if self.runtime.id == 1:
-			
-			args = "python pub_key_encoder.py " + str(self.n_revealed) + " " + str(self.e) + " " + sys.argv[2]
-			p = subprocess.call(args, shell=True)
+
+		args = "python pub_key_encoder.py " + str(self.n_revealed) + " " + str(self.e) + " " + sys.argv[2]
+		p = subprocess.call(args, shell=True)
 			
 		self.runtime.shutdown()
 	'''
