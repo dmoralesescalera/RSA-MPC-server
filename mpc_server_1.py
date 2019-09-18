@@ -2,25 +2,18 @@ from flask import Flask, request
 from subprocess import Popen
 from threading import Thread
 from binascii import hexlify, unhexlify
+from OpenSSL import crypto
 import json
 import sys
 import time
 import smtplib
+import requests
 
 ####################
 ### INITIAL DATA ###
 ####################
 
 app = Flask(__name__)
-
-"""
-	Information about the actual server.
-"""
-serverInfo = {
-	"id": "s001",
-	"ip": "1.1.1.1",
-	"port": 5001
-}
 
 """
 	Port range is predefined and 3 servers that run a MPC instance use 
@@ -34,28 +27,6 @@ mpcPortList = [
 	{"port": 9004, "status": 0}, {"port": 9005, "status": 0}, 
 	{"port": 9006, "status": 0}, {"port": 9007, "status": 0},
 	{"port": 9008, "status": 0}, {"port": 9009, "status": 0}
-]
-
-"""
-	Information about all the servers that exist in the MPC server cloud.
-"""
-mpcServerList = [
-	{
-		"id": "serverInfo",
-		"num": 3
-	},
-	{
-		"id": "s001",
-		"ip": "1.1.1.1"
-	},
-	{
-		"id": "s002",
-		"ip": "1.1.1.2"
-	},
-	{
-		"id": "s003",
-		"ip": "1.1.1.3"
-	}
 ]
 
 """
@@ -142,18 +113,40 @@ def verify_orquestrator(orqId):
 			return orq
 	return None
 
+def create_key(bits, type=crypto.TYPE_RSA):
+    """Create a public/private key pair."""
+    pk = crypto.PKey()
+    pk.generate_key(type, bits)
+    return pk
+
+def create_request(pk, common_name, digest="sha1"):
+    """Create a certificate request."""
+    req = crypto.X509Req()
+    subj = req.get_subject()
+    subj.CN = common_name
+
+    req.set_pubkey(pk)
+    req.sign(pk, digest)
+    return req
+
 def genKey_func(keyId, server1, server2, server3, port):
 	print "Thread init"
 	
+	# Create the new directory with key information
+	arg = "mkdir ~/viff/apps/key" + keyId
+	Popen(arg, shell=True).wait()
+
 	# The 3 servers use the same port for MPC
-	if server1 == serverInfo["id"]:
+	# Get the role of this Node (Player 1, 2 or 3)
+	if server1 == nodeInfo["id"]:
 		playerNumber = "player-1.ini"
-	elif server2 == serverInfo["id"]:
+	elif server2 == nodeInfo["id"]:
 		playerNumber = "player-2.ini"
-	elif server3 == serverInfo["id"]:
+	elif server3 == nodeInfo["id"]:
 		playerNumber = "player-3.ini"	
 
-	for server in mpcServerList:
+	# Get the 3 Nodes network addresses
+	for server in mpcNodeList:
 		if server["id"] == server1:
 			sv1 = server["ip"] + ":" + str(port)
 		if server["id"] == server2:
@@ -161,12 +154,9 @@ def genKey_func(keyId, server1, server2, server3, port):
 		if server["id"] == server3:
 			sv3 = server["ip"] + ":" + str(port)
 
-	arg0 = "python ~/viff/apps/generate-config-files.py -n 3 -t 1 " + sv1 + " " + sv2 + " " + sv3
-	p0 = Popen(arg0, shell=True)
-	p0.wait()
-
-	arg = "mkdir ~/viff/apps/key" + keyId
-	Popen(arg, shell=True).wait()	
+	arg0 = "python ~/viff/apps/generate-config-files.py -n 3 -t 1 --skip-prss " + sv1 + " " + sv2 + " " + sv3
+	Popen(arg0, shell=True).wait()
+			
 
 	arg1 = "python ~/viff/apps/rsa_create_key.py ~/viff/apps/" + playerNumber + " ~/viff/apps/key" + keyId
 	p1 = Popen(arg1, shell=True)
@@ -195,14 +185,14 @@ def sign_method(message, keyId, port, server1, server2, server3):
 	f.close()
 	
 	# The 3 servers use the same port for MPC
-	if server1 == serverInfo["id"]:
+	if server1 == nodeInfo["id"]:
 		playerNumber = "player-1.ini"
-	elif server2 == serverInfo["id"]:
+	elif server2 == nodeInfo["id"]:
 		playerNumber = "player-2.ini"
-	elif server3 == serverInfo["id"]:
+	elif server3 == nodeInfo["id"]:
 		playerNumber = "player-3.ini"	
 
-	for server in mpcServerList:
+	for server in mpcNodeList:
 		if server["id"] == server1:
 			sv1 = server["ip"] + ":" + str(port)
 		if server["id"] == server2:
@@ -229,6 +219,51 @@ def sign_method(message, keyId, port, server1, server2, server3):
 ### HTTP REQUEST METHODS ###
 ############################
 
+@app.route('/getCertificates', methods=['GET'])
+def handler_getCertificates():
+	
+	# Privatekey of Node
+	key = create_key(1024)
+	for i in range(1,4):
+		fp = open("player-" + str(i) + ".key", "w+")
+		fp.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, key))
+		fp.close()
+
+	# Create 3 requests to CA
+	serial = int(nodeInfo["id"][1::])
+	print "SERIAL: " + str(serial)
+	
+	req = []
+	for i in range(1,4):
+		cn = "VIFF Player " + str(i)
+		r = create_request(key, cn)
+		req.append(crypto.dump_certificate_request(crypto.FILETYPE_PEM, r))
+
+	target = "http://1.1.1.11:5000/createCertificates"
+	payload = { "serial": serial, "req": req }
+	headers = { "content-type": "application/json" }
+	r = requests.post(target, data=json.dumps(payload), headers=headers)
+
+	# Obtain response
+	response = dict(json.loads(r.text))
+	pretty_print('B', response)
+
+	dump_ca_cert = response['ca_cert']
+	fp = open("ca.cert", "w+")
+	fp.write(dump_ca_cert)
+	fp.close()		
+
+	dump_certs = response['certs']
+	pretty_print('D', dump_certs)
+	for i in range(0,3):
+		fp = open("player-" + str(i+1) + ".cert", "w+")
+		fp.write(dump_certs[i])
+		fp.close()
+
+	print "<< CERTIFICATES GENERATED >>"
+
+	return json.dumps({"status": "certificatesGenerated"})
+
 @app.route('/generateKeys/<string:orqId>/<int:keyId>', methods=['POST'])
 def handler_generateKeys(orqId,keyId):
 	# Check json has 3 servers and MPC communication port
@@ -241,7 +276,7 @@ def handler_generateKeys(orqId,keyId):
 	orquestrator = verify_orquestrator(orqId)
 	if orquestrator != None:
 		# Orquestrator exists
-
+		
 		# Set port as not available port
 		for p in mpcPortList:
 			if p["port"] == request.json["port"]:
@@ -349,4 +384,19 @@ def handler_signMessage(orqId, keyId):
 			
 
 if __name__ == '__main__':
+
+	# Load nodeInfo json file
+	with open("nodeInfo.json", "r") as json_file:
+		data = json_file.read()
+	data2 = json.loads(data)
+	nodeInfo = data2["nodeInfo"]
+	json_file.close()
+
+	# Load mpcNodeList json file
+	with open("mpcNodeList.json", "r") as json_file:
+		data = json_file.read()
+	data2 = json.loads(data)
+	mpcNodeList = data2["mpcNodeList"]
+	json_file.close()
+
 	app.run(host='0.0.0.0',port=5000,debug=True)
