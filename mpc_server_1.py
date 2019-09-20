@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, abort
 from subprocess import Popen
 from threading import Thread
 from binascii import hexlify, unhexlify
@@ -8,6 +8,7 @@ import sys
 import time
 import smtplib
 import requests
+import os
 
 ####################
 ### INITIAL DATA ###
@@ -219,6 +220,50 @@ def sign_method(message, keyId, port, server1, server2, server3):
 ### HTTP REQUEST METHODS ###
 ############################
 
+"""
+	nodeInfo = {
+		"id" : "s001",
+		"ip" : "1.1.1.1",
+		"port" : 5000	
+	}
+"""
+
+@app.route('/configNode', methods=['POST'])
+def handler_configNode():
+	if not request.json:
+		abort(400)
+
+	nodeInfo = json.dumps(request.json)
+	with open("nodeInfo.json", "w+") as json_file:
+		json_file.write(nodeInfo)
+	json_file.close()
+	nodeInfo_gen = True
+
+	return json.dumps({ "status" : "ok" })
+
+"""
+	mpcNodeList = {
+		"mpcNodeList" : {[
+			{"id" : "serverInfo", "num" : 2},
+			{"id" : "s001", "ip" : "1.1.1.1"},
+			{"id" : "s002", "ip" : "1.1.1.2"}		
+		]}
+	}
+"""
+
+@app.route('/configNetwork', methods=['POST'])
+def handler_configNetwork():
+	if not request.json:
+		abort(400)
+
+	mpcNodeList = json.dumps(request.json)
+	with open("mpcNodeList.json", "w+") as json_file:
+		json_file.write(mpcNodeList)
+	json_file.close()
+	mpcNodeList_gen = True
+
+	return json.dumps({ "status" : "ok" })
+
 @app.route('/getCertificates', methods=['GET'])
 def handler_getCertificates():
 	
@@ -384,19 +429,27 @@ def handler_signMessage(orqId, keyId):
 			
 
 if __name__ == '__main__':
+	print os.getpid()
 
 	# Load nodeInfo json file
-	with open("nodeInfo.json", "r") as json_file:
-		data = json_file.read()
-	data2 = json.loads(data)
-	nodeInfo = data2["nodeInfo"]
-	json_file.close()
+	if os.path.exists("/viff/apps/nodeInfo.json"):
+		with open("nodeInfo.json", "r") as json_file:
+			nodeInfo_raw = json_file.read()
+		nodeInfo = json.loads(nodeInfo_raw)
+		json_file.close()
+		nodeInfo_gen = True
+	else:
+		nodeInfo_gen = False
 
 	# Load mpcNodeList json file
-	with open("mpcNodeList.json", "r") as json_file:
-		data = json_file.read()
-	data2 = json.loads(data)
-	mpcNodeList = data2["mpcNodeList"]
-	json_file.close()
+	if os.path.exists("/viff/apps/mpcNodeList.json"):
+		with open("mpcNodeList.json", "r") as json_file:
+			data = json_file.read()
+		data2 = json.loads(data)
+		mpcNodeList = data2["mpcNodeList"]
+		json_file.close()
+		mpcNodeList_gen = True
+	else:
+		mpcNodeList_gen = False
 
-	app.run(host='0.0.0.0',port=5000,debug=True)
+	app.run(host='localhost',port=5000,debug=True)
