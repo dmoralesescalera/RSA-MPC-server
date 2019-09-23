@@ -272,9 +272,9 @@ def handler_configNetwork():
 def handler_getCertificates():
 	
 	with open("/viff/apps/nodeInfo.json", "r") as json_file:
-			nodeInfo_raw = json_file.read()
-		nodeInfo = json.loads(nodeInfo_raw)
-		json_file.close()
+		nodeInfo_raw = json_file.read()
+	nodeInfo = json.loads(nodeInfo_raw)
+	json_file.close()
 	
 	# Privatekey of Node
 	key = create_key(1024)
