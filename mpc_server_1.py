@@ -300,7 +300,7 @@ def handler_getCertificates():
 		req.append(crypto.dump_certificate_request(crypto.FILETYPE_PEM, r))
 	
 	# Dinamic build of CA ip
-	for item in networkList["networkList"]:
+	for item in networkList:
 		if item["id"] == "ca":
 			ca_ip = item["ip"]
 	target = "http://" + ca_ip + ":5000/createCertificates"
