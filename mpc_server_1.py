@@ -271,6 +271,11 @@ def handler_configNetwork():
 @app.route('/getCertificates', methods=['GET'])
 def handler_getCertificates():
 	
+	with open("/viff/apps/nodeInfo.json", "r") as json_file:
+			nodeInfo_raw = json_file.read()
+		nodeInfo = json.loads(nodeInfo_raw)
+		json_file.close()
+	
 	# Privatekey of Node
 	key = create_key(1024)
 	for i in range(1,4):
@@ -443,7 +448,7 @@ if __name__ == '__main__':
 	
 	# Load nodeInfo json file
 	if os.path.exists("/viff/apps/nodeInfo.json"):
-		with open("nodeInfo.json", "r") as json_file:
+		with open("/viff/apps/nodeInfo.json", "r") as json_file:
 			nodeInfo_raw = json_file.read()
 		nodeInfo = json.loads(nodeInfo_raw)
 		json_file.close()
@@ -453,7 +458,7 @@ if __name__ == '__main__':
 
 	# Load networkList json file
 	if os.path.exists("/viff/apps/networkList.json"):
-		with open("networkList.json", "r") as json_file:
+		with open("/viff/apps/networkList.json", "r") as json_file:
 			data = json_file.read()
 		data2 = json.loads(data)
 		networkList = data2["networkList"]
