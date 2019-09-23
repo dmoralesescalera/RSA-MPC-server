@@ -276,6 +276,12 @@ def handler_getCertificates():
 	nodeInfo = json.loads(nodeInfo_raw)
 	json_file.close()
 	
+	with open("/viff/apps/networkList.json", "r") as json_file:
+		data = json_file.read()
+	data2 = json.loads(data)
+	networkList = data2["networkList"]
+	json_file.close()
+	
 	# Privatekey of Node
 	key = create_key(1024)
 	for i in range(1,4):
