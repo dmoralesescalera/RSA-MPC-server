@@ -234,7 +234,7 @@ def handler_configNode():
 		abort(400)
 
 	nodeInfo = json.dumps(request.json)
-	with open("nodeInfo.json", "w+") as json_file:
+	with open("/viff/apps/nodeInfo.json", "w+") as json_file:
 		json_file.write(nodeInfo)
 	json_file.close()
 	nodeInfo_gen = True
@@ -259,7 +259,7 @@ def handler_configNetwork():
 		abort(400)
 
 	networkList = json.dumps(request.json)
-	with open("networkList.json", "w+") as json_file:
+	with open("/viff/apps/networkList.json", "w+") as json_file:
 		json_file.write(networkList)
 	json_file.close()
 	networkList_gen = True
@@ -438,7 +438,9 @@ def handler_signMessage(orqId, keyId):
 
 if __name__ == '__main__':
 	print os.getpid()
-
+	nodeInfo = None
+	networkList = None
+	
 	# Load nodeInfo json file
 	if os.path.exists("/viff/apps/nodeInfo.json"):
 		with open("nodeInfo.json", "r") as json_file:
