@@ -134,7 +134,7 @@ def genKey_func(keyId, server1, server2, server3, port):
 	print "Thread init"
 	
 	# Create the new directory with key information
-	arg = "mkdir ~/viff/apps/key" + keyId
+	arg = "mkdir /viff/apps/key" + keyId
 	Popen(arg, shell=True).wait()
 
 	# The 3 servers use the same port for MPC
@@ -147,7 +147,7 @@ def genKey_func(keyId, server1, server2, server3, port):
 		playerNumber = "player-3.ini"	
 
 	# Get the 3 Nodes network addresses
-	for server in mpcNodeList:
+	for server in networkList:
 		if server["id"] == server1:
 			sv1 = server["ip"] + ":" + str(port)
 		if server["id"] == server2:
@@ -155,11 +155,11 @@ def genKey_func(keyId, server1, server2, server3, port):
 		if server["id"] == server3:
 			sv3 = server["ip"] + ":" + str(port)
 
-	arg0 = "python ~/viff/apps/generate-config-files.py -n 3 -t 1 --skip-prss " + sv1 + " " + sv2 + " " + sv3
+	arg0 = "python /viff/apps/generate-config-files.py -n 3 -t 1 --skip-prss " + sv1 + " " + sv2 + " " + sv3
 	Popen(arg0, shell=True).wait()
 			
 
-	arg1 = "python ~/viff/apps/rsa_create_key.py ~/viff/apps/" + playerNumber + " ~/viff/apps/key" + keyId
+	arg1 = "python /viff/apps/rsa_create_key.py ~/viff/apps/" + playerNumber + " ~/viff/apps/key" + keyId
 	p1 = Popen(arg1, shell=True)
 	p1.wait()
 	
@@ -193,7 +193,7 @@ def sign_method(message, keyId, port, server1, server2, server3):
 	elif server3 == nodeInfo["id"]:
 		playerNumber = "player-3.ini"	
 
-	for server in mpcNodeList:
+	for server in networkList:
 		if server["id"] == server1:
 			sv1 = server["ip"] + ":" + str(port)
 		if server["id"] == server2:
@@ -201,11 +201,11 @@ def sign_method(message, keyId, port, server1, server2, server3):
 		if server["id"] == server3:
 			sv3 = server["ip"] + ":" + str(port)
 
-	arg0 = "python ~/viff/apps/generate-config-files.py -n 3 -t 1 " + sv1 + " " + sv2 + " " + sv3
+	arg0 = "python /viff/apps/generate-config-files.py -n 3 -t 1 " + sv1 + " " + sv2 + " " + sv3
 	p0 = Popen(arg0, shell=True)
 	p0.wait()
 
-	arg1 = "python ~/viff/apps/rsa_sign.py ~/viff/apps/" + playerNumber + " " + str(keyId)
+	arg1 = "python /viff/apps/rsa_sign.py ~/viff/apps/" + playerNumber + " " + str(keyId)
 	p1 = Popen(arg1, shell = True)
 	p1.wait()
 
@@ -242,11 +242,13 @@ def handler_configNode():
 	return json.dumps({ "status" : "ok" })
 
 """
-	mpcNodeList = {
-		"mpcNodeList" : {[
+	networkList = {
+		"networkList" : {[
 			{"id" : "serverInfo", "num" : 2},
 			{"id" : "s001", "ip" : "1.1.1.1"},
-			{"id" : "s002", "ip" : "1.1.1.2"}		
+			{"id" : "s002", "ip" : "1.1.1.2"},
+			{"id" : "o001", "ip" : "1.1.1.10"},
+			{"id" : "ca", "ip" : "1.1.1.11"}
 		]}
 	}
 """
@@ -256,11 +258,13 @@ def handler_configNetwork():
 	if not request.json:
 		abort(400)
 
-	mpcNodeList = json.dumps(request.json)
-	with open("mpcNodeList.json", "w+") as json_file:
-		json_file.write(mpcNodeList)
+	networkList = json.dumps(request.json)
+	with open("networkList.json", "w+") as json_file:
+		json_file.write(networkList)
 	json_file.close()
-	mpcNodeList_gen = True
+	networkList_gen = True
+	
+	
 
 	return json.dumps({ "status" : "ok" })
 
@@ -283,8 +287,12 @@ def handler_getCertificates():
 		cn = "VIFF Player " + str(i)
 		r = create_request(key, cn)
 		req.append(crypto.dump_certificate_request(crypto.FILETYPE_PEM, r))
-
-	target = "http://1.1.1.11:5000/createCertificates"
+	
+	# Dinamic build of CA ip
+	for item in networkList["networkList"]:
+		if item["id"] == "ca":
+			ca_ip = item["ip"]
+	target = "http://" + ca_ip + ":5000/createCertificates"
 	payload = { "serial": serial, "req": req }
 	headers = { "content-type": "application/json" }
 	r = requests.post(target, data=json.dumps(payload), headers=headers)
@@ -441,15 +449,15 @@ if __name__ == '__main__':
 	else:
 		nodeInfo_gen = False
 
-	# Load mpcNodeList json file
-	if os.path.exists("/viff/apps/mpcNodeList.json"):
-		with open("mpcNodeList.json", "r") as json_file:
+	# Load networkList json file
+	if os.path.exists("/viff/apps/networkList.json"):
+		with open("networkList.json", "r") as json_file:
 			data = json_file.read()
 		data2 = json.loads(data)
-		mpcNodeList = data2["mpcNodeList"]
+		networkList = data2["networkList"]
 		json_file.close()
-		mpcNodeList_gen = True
+		networkList_gen = True
 	else:
-		mpcNodeList_gen = False
+		networkList_gen = False
 
 	app.run(host='0.0.0.0',port=5000,debug=True)
