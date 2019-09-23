@@ -133,6 +133,10 @@ def create_request(pk, common_name, digest="sha1"):
 def genKey_func(keyId, server1, server2, server3, port):
 	print "Thread init"
 	
+	config_data = load_config_files()
+	nodeInfo = config_data[0]
+	networkList = config_data[1]
+	
 	# Create the new directory with key information
 	arg = "mkdir /viff/apps/key" + keyId
 	Popen(arg, shell=True).wait()
@@ -178,6 +182,11 @@ def genKey_func(keyId, server1, server2, server3, port):
 	print "Thread finish"
 
 def sign_method(message, keyId, port, server1, server2, server3):
+	
+	config_data = load_config_files()
+	nodeInfo = config_data[0]
+	networkList = config_data[1]
+	
 	formatted_message = str(bytestrToInt(unhexlify(message)))
 	
 	# Write message to sign on buffer, Integer formatted
@@ -215,6 +224,20 @@ def sign_method(message, keyId, port, server1, server2, server3):
 
 	firma = hexlify(intToBytestr(int(firma), 2000))
 	return firma
+
+def load_config_files():
+	with open("/viff/apps/nodeInfo.json", "r") as json_file:
+		nodeInfo_raw = json_file.read()
+	nodeInfo = json.loads(nodeInfo_raw)
+	json_file.close()
+	
+	with open("/viff/apps/networkList.json", "r") as json_file:
+		data = json_file.read()
+	data2 = json.loads(data)
+	networkList = data2["networkList"]
+	json_file.close()
+	
+	return [nodeInfo, networkList]
 
 ############################
 ### HTTP REQUEST METHODS ###
@@ -271,16 +294,9 @@ def handler_configNetwork():
 @app.route('/getCertificates', methods=['GET'])
 def handler_getCertificates():
 	
-	with open("/viff/apps/nodeInfo.json", "r") as json_file:
-		nodeInfo_raw = json_file.read()
-	nodeInfo = json.loads(nodeInfo_raw)
-	json_file.close()
-	
-	with open("/viff/apps/networkList.json", "r") as json_file:
-		data = json_file.read()
-	data2 = json.loads(data)
-	networkList = data2["networkList"]
-	json_file.close()
+	config_data = load_config_files()
+	nodeInfo = config_data[0]
+	networkList = config_data[1]
 	
 	# Privatekey of Node
 	key = create_key(1024)
@@ -336,6 +352,10 @@ def handler_generateKeys(orqId,keyId):
 
 	pretty_print('*', 'generateKey method')
 	
+	config_data = load_config_files()
+	nodeInfo = config_data[0]
+	networkList = config_data[1]
+	
 	# Check for orquestrator identification
 	orquestrator = verify_orquestrator(orqId)
 	if orquestrator != None:
@@ -383,6 +403,10 @@ def handler_getPorts():
 @app.route('/getKey/<string:orqId>/<int:keyId>', methods=['GET'])
 def handler_getKey(orqId, keyId):
 	pretty_print('*', 'getKey method')
+	
+	config_data = load_config_files()
+	nodeInfo = config_data[0]
+	networkList = config_data[1]
 
 	# Check for orquestrator identification
 	orquestrator = verify_orquestrator(orqId)	
@@ -410,6 +434,10 @@ def handler_getKey(orqId, keyId):
 @app.route('/signMessage/<string:orqId>/<int:keyId>', methods=['GET'])
 def handler_signMessage(orqId, keyId):
 	pretty_print('*', 'signMessage method')
+	
+	config_data = load_config_files()
+	nodeInfo = config_data[0]
+	networkList = config_data[1]
 
 	# Check for orquestrator identification
 	orquestrator = verify_orquestrator(orqId)
