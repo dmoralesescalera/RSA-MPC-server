@@ -163,7 +163,7 @@ def genKey_func(keyId, server1, server2, server3, port):
 	Popen(arg0, shell=True).wait()
 			
 
-	arg1 = "python /viff/apps/rsa_create_key.py ~/viff/apps/" + playerNumber + " ~/viff/apps/key" + keyId
+	arg1 = "python /viff/apps/rsa_create_key.py /viff/apps/" + playerNumber + " /viff/apps/key" + keyId
 	p1 = Popen(arg1, shell=True)
 	p1.wait()
 	
@@ -214,7 +214,7 @@ def sign_method(message, keyId, port, server1, server2, server3):
 	p0 = Popen(arg0, shell=True)
 	p0.wait()
 
-	arg1 = "python /viff/apps/rsa_sign.py ~/viff/apps/" + playerNumber + " " + str(keyId)
+	arg1 = "python /viff/apps/rsa_sign.py /viff/apps/" + playerNumber + " " + str(keyId)
 	p1 = Popen(arg1, shell = True)
 	p1.wait()
 
