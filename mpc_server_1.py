@@ -163,6 +163,11 @@ def genKey_func(keyId, server1, server2, server3, port):
 	Popen(arg0, shell=True).wait()
 	
 	print "[CONFIG FILES GENERATED]"
+	
+	with open("/viff/apps/" + playerNumber, "r") as f:
+		text = f.read()
+	print text
+	f.close()	
 			
 
 	arg1 = "python /viff/apps/rsa_create_key.py /viff/apps/" + playerNumber + " /viff/apps/key" + keyId
