@@ -161,11 +161,15 @@ def genKey_func(keyId, server1, server2, server3, port):
 
 	arg0 = "python /viff/apps/generate-config-files.py -n 3 -t 1 --skip-prss " + sv1 + " " + sv2 + " " + sv3
 	Popen(arg0, shell=True).wait()
+	
+	print "[CONFIG FILES GENERATED]"
 			
 
 	arg1 = "python /viff/apps/rsa_create_key.py /viff/apps/" + playerNumber + " /viff/apps/key" + keyId
 	p1 = Popen(arg1, shell=True)
 	p1.wait()
+	
+	print "[KEY GENERATION FINISHED]"
 	
 	"""
 	# Send email notifying that generation process has finished
