@@ -170,7 +170,7 @@ def genKey_func(keyId, server1, server2, server3, port):
 	f.close()	
 			
 
-	arg1 = "python /viff/apps/rsa_create_key.py /viff/apps/" + playerNumber + " /viff/apps/key" + keyId
+	arg1 = "python /viff/apps/rsa_create_key.py /" + playerNumber + " /viff/apps/key" + keyId
 	p1 = Popen(arg1, shell=True)
 	p1.wait()
 	
