@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, abort, make_response, request, url_for, redirect
-from flask_httpauth import HTTPTokenAuth
-from itsdangerous import (TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired)
+#from flask_httpauth import HTTPTokenAuth
+#from itsdangerous import (TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired)
 import requests
 import json
 import ssl
@@ -16,7 +16,7 @@ app = Flask(__name__)
 #########################
 
 orqId = "o001"
-"""
+
 serverList = [
 	{
 		"id": "serverInfo",
@@ -38,7 +38,7 @@ serverList = [
 		"port": 5000
 	}
 ]
-"""
+
 
 """
 keyList = [
@@ -215,20 +215,6 @@ def not_found(error):
 
 if __name__ == '__main__':
 	
-	# Load serverList json file
-	with open("serverList.json", "r") as json_file:
-		data = json_file.read()
-	data2 = json.loads(data)
-	serverList = data2["serverList"]
-	json_file.close()
-
-	# Load keyList json file
-	with open("keyList.json", "r") as json_file:
-		data = json_file.read()
-	data2 = json.loads(data)
-	keyList = data2["keyList"]
-	json_file.close()
-
 	app.run(host='0.0.0.0', port=5000, debug=True)
 	#app.run(debug=True, ssl_context=ssl_context)
 
