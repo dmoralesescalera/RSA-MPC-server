@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+    h1:
+        image: viff
+        hostname: viff1
+
+    h2:
+        image: viff
+        hostname: viff2
+
+    h3:
+        image: viff
+        hostname: viff3
+
+networks:
+    default:
+        external:
+            name: dockernet
