@@ -57,7 +57,7 @@ class Protocol:
 	def export_public(self):
 		print "## EXPORTANDO CLAVE PUBLICA ##"
 
-		args = "python pub_key_encoder.py " + str(self.n_revealed) + " " + str(self.e) + " " + sys.argv[2]
+		args = "python /viff/apps/pub_key_encoder.py " + str(self.n_revealed) + " " + str(self.e) + " " + sys.argv[2]
 		p = subprocess.call(args, shell=True)
 			
 		self.runtime.shutdown()
@@ -513,7 +513,7 @@ class Protocol:
 		self.rounds = 1
 		self.decrypt_benchmark_active = True
 		self.decrypt_rounds = 1
-		self.bits_N = 1024
+		self.bits_N = 32
 		self.m = 2
 		self.cyphertext = 0
 		self.bound1 = 12

@@ -14,7 +14,8 @@ RUN \
 	pip install pyOpenSSL && \
 	pip install requests && \
 	pip install asn1 && \
-	pip install future
+	pip install future && \
+	pip install pycryptodome
 
 # Download viff and fix runtime file error before installation
 RUN \
@@ -32,6 +33,7 @@ RUN \
 COPY mpc_node.py /viff/apps/
 COPY rsa_create_key.py /viff/apps/
 COPY rsa_sign.py /viff/apps/
+COPY pub_key_encoder.py /viff/apps/
 
 # Execute the app
 CMD /usr/bin/python /viff/apps/mpc_node.py

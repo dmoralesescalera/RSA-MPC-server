@@ -72,7 +72,6 @@ def handler_getCert():
 			cert = create_cert(req, ca_cert, ca_key, serial)
 			dump_certs.append(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
 
-		pretty_print('X', dump_certs)
 		return json.dumps({ "status": "certOK", "ca_cert": dump_ca_cert, "certs": dump_certs })
 
 

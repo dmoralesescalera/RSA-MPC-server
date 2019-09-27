@@ -18,6 +18,7 @@ app = Flask(__name__)
 
 nodeInfo_gen = None
 networkList_gen = None
+certificate_gen = None
 
 """
 	Port range is predefined and 3 servers that run a MPC instance use 
@@ -196,7 +197,7 @@ def sign_method(message, keyId, port, server1, server2, server3):
 	formatted_message = str(bytestrToInt(unhexlify(message)))
 	
 	# Write message to sign on buffer, Integer formatted
-	f = open("./key" + str(keyId) + "/buffer.txt", "w+")
+	f = open("/viff/apps/key" + str(keyId) + "/buffer.txt", "w+")
 	f.write(formatted_message)
 	f.close()
 	
@@ -224,7 +225,7 @@ def sign_method(message, keyId, port, server1, server2, server3):
 	p1 = Popen(arg1, shell = True)
 	p1.wait()
 
-	f = open("./key" + str(keyId) + "/buffer.txt", "r")
+	f = open("/viff/apps/key" + str(keyId) + "/buffer.txt", "r")
 	firma = f.readline()
 	f.close()
 
@@ -266,6 +267,7 @@ def handler_configNode():
 	with open("/viff/apps/nodeInfo.json", "w+") as json_file:
 		json_file.write(nodeInfo)
 	json_file.close()
+	global nodeInfo_gen
 	nodeInfo_gen = True
 
 	return json.dumps({ "status" : "ok" })
@@ -291,6 +293,7 @@ def handler_configNetwork():
 	with open("/viff/apps/networkList.json", "w+") as json_file:
 		json_file.write(networkList)
 	json_file.close()
+	global networkList_gen
 	networkList_gen = True
 	
 	
@@ -347,15 +350,21 @@ def handler_getCertificates():
 		fp.close()
 
 	print "<< CERTIFICATES GENERATED >>"
+	global certificate_gen
+	certificate_gen = True
 
 	return json.dumps({"status": "certificatesGenerated"})
 
 @app.route('/generateKeys/<string:orqId>/<int:keyId>', methods=['POST'])
 def handler_generateKeys(orqId,keyId):
 	# Check json has 3 servers and MPC communication port
+	print "NODEINFO & NETWORKLIST:::::"
+	print nodeInfo_gen
+	print networkList_gen
+
 	if not request.json:
 		abort(400)
-	if nodeInfo_gen is not True or networkList_gen is not True:
+	if nodeInfo_gen != True or networkList_gen != True or certificate_gen != True:
 		abort(503)
 
 	pretty_print('*', 'generateKey method')
@@ -430,7 +439,7 @@ def handler_getKey(orqId, keyId):
 			return json.dumps({"status": "generatingKeys"})
 		else:
 			# Get public key
-			f = open("./key" + str(keyId) + "/pub_key.txt", "r")
+			f = open("/viff/apps/key" + str(keyId) + "/pub_key.txt", "r")
 			pubKey = f.read()
 			f.close()
 			return json.dumps({"status": "generated", "pubKey": pubKey})
@@ -442,10 +451,11 @@ def handler_getKey(orqId, keyId):
 @app.route('/signMessage/<string:orqId>/<int:keyId>', methods=['GET'])
 def handler_signMessage(orqId, keyId):
 	
-	if nodeInfo_gen is not True or networkList_gen is not True:
+	if nodeInfo_gen != True or networkList_gen != True or certificate_gen != True:
 		abort(503)
 
 	pretty_print('*', 'signMessage method')
+	print request
 	
 	config_data = load_config_files()
 	nodeInfo = config_data[0]
@@ -488,8 +498,7 @@ def handler_signMessage(orqId, keyId):
 			
 
 if __name__ == '__main__':
-	print os.getpid()
-	
+
 	# Load nodeInfo json file
 	if os.path.exists("/viff/apps/nodeInfo.json"):
 		with open("/viff/apps/nodeInfo.json", "r") as json_file:

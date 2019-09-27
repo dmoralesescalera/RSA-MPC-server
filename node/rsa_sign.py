@@ -27,11 +27,11 @@ class Protocol:
 	def import_params(self):
 		# Importar los parametros particulares de cada parte: N y d (necesarios para firmar)
 		if self.runtime.id == 1:
-			f = open("./key" + sys.argv[2] + "/values-1.txt", "r")
+			f = open("/viff/apps/key" + sys.argv[2] + "/values-1.txt", "r")
 		elif self.runtime.id == 2:
-			f = open("./key" + sys.argv[2] + "/values-2.txt", "r")
+			f = open("/viff/apps/key" + sys.argv[2] + "/values-2.txt", "r")
 		elif self.runtime.id == 3:
-			f = open("./key" + sys.argv[2] + "/values-3.txt", "r")
+			f = open("/viff/apps/key" + sys.argv[2] + "/values-3.txt", "r")
 	
 		self.n_revealed = int(f.readline())
 		self.d = int(f.readline())
@@ -41,7 +41,7 @@ class Protocol:
 		print "d: " + str(self.d)
 
 		# Importar el mensaje guardado en buffer que se quiere firmar
-		f = open("./key" + sys.argv[2] + "/buffer.txt", "r")
+		f = open("/viff/apps/key" + sys.argv[2] + "/buffer.txt", "r")
 		self.message = int(f.readline())
 		f.close()
 		print "Hash: " + str(self.message)
@@ -86,7 +86,7 @@ class Protocol:
 		self.signature = results[0].value % self.n_revealed
 		print "\nSignature for message M is C = " + str(self.signature)	
 		
-		file_name = "./key" + sys.argv[2] + "/buffer.txt"
+		file_name = "/viff/apps/key" + sys.argv[2] + "/buffer.txt"
 		f = open(file_name, "w+")
 		f.write(str(self.signature) + "\n")
 		f.close()
@@ -101,7 +101,7 @@ class Protocol:
 		self.rounds = 1
 		self.decrypt_benchmark_active = True
 		self.decrypt_rounds = 1
-		self.bits_N = 1024
+		self.bits_N = 32
 		self.m = 2
 		self.cyphertext = 0
 		self.bound1 = 12

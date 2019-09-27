@@ -11,27 +11,13 @@ RUN \
 	apt-get install -y nano && \
 	apt-get install -y systemd && \
 	apt-get install -y python-flask && \
+	apt-get install -y curl && \
 	pip install pyOpenSSL && \
 	pip install requests && \
 	pip install asn1 && \
 	pip install future
 
-# Download viff and fix runtime file error before installation
-RUN \
-	hg clone http://hg.viff.dk/viff/ && \
-	rm /viff/viff/runtime.py
-
-COPY runtime.py /viff/viff/
-
-RUN \
-	cd /viff && \
-	python setup.py build && \
-	python setup.py install
-
-# Add the application scripts
-COPY ca.py /
-COPY ca.cert /
-COPY ca.key /
+COPY curl-test.sh /	
 
 # Execute the app
-CMD /usr/bin/python /ca.py
+#CMD /bin/sh
