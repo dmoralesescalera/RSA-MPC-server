@@ -36,7 +36,7 @@ A client example has been developed, for certificate signing operations with the
   
   ![](https://github.com/dmoralesescalera/RSA-MPC-server/blob/master/pics/config_nodes.gif)
   
-5. Launch client: <br/>
+5. Build and run client: <br/>
   `docker build -t client ./client` <br/>
   `docker run -it --network rsa-net client`
   
