@@ -313,10 +313,21 @@ class ShareExchanger(Int16StringReceiver):
                 # The player ID are stored in the serial number of the
                 # certificate -- this makes it easy to check that the
                 # player is who he claims to be.
+                """
                 if cert.get_serial_number() != self.peer_id:
                     print "Peer %s claims to be %d, aborting!" \
                         % (cert.get_subject(), self.peer_id)
                     self.transport.loseConnection()
+                """
+
+                # TODO: Check if cert is signed by correct CA
+
+                # The commonName's last digit has to be the same as the peer_id
+                # because it represent the player role that the node has
+                if str(cert.get_subject().commonName[-1:]) != str(self.peer_id):
+                    print "Common Name id <%s> is not equal to peer id <%s>" \
+                        % (cert.get_subject().commonName[-1:], self.peer_id)
+                    self.transport.loseConnection()    
             self.factory.identify_peer(self)
         else:
             try:

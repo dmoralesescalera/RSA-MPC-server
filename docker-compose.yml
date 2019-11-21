@@ -14,6 +14,13 @@ services:
         tty: true
         networks:
             rsa-net:
+    orchestrator:
+        build:
+            context: ./orchestrator
+        image: orchestrator
+        tty: true
+        networks:
+            rsa-net:
 networks:
     rsa-net:
         external: true

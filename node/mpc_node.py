@@ -167,6 +167,9 @@ def genKey_func(keyId, server1, server2, server3, port):
 	Popen(arg0, shell=True).wait()
 	
 	print "[CONFIG FILES GENERATED]"
+
+	argx = "cat /" + playerNumber
+	Popen(argx, shell=True).wait()
 		
 	arg1 = "python /viff/apps/rsa_create_key.py /" + playerNumber + " /viff/apps/key" + keyId
 	p1 = Popen(arg1, shell=True)
@@ -221,7 +224,7 @@ def sign_method(message, keyId, port, server1, server2, server3):
 	p0 = Popen(arg0, shell=True)
 	p0.wait()
 
-	arg1 = "python /viff/apps/rsa_sign.py /viff/apps/" + playerNumber + " " + str(keyId)
+	arg1 = "python /viff/apps/rsa_sign.py /" + playerNumber + " " + str(keyId)
 	p1 = Popen(arg1, shell = True)
 	p1.wait()
 
@@ -269,7 +272,7 @@ def handler_configNode():
 	json_file.close()
 	global nodeInfo_gen
 	nodeInfo_gen = True
-
+	print nodeInfo
 	return json.dumps({ "status" : "ok" })
 
 """
@@ -295,9 +298,7 @@ def handler_configNetwork():
 	json_file.close()
 	global networkList_gen
 	networkList_gen = True
-	
-	
-
+	print networkList
 	return json.dumps({ "status" : "ok" })
 
 @app.route('/getCertificates', methods=['GET'])
@@ -316,7 +317,7 @@ def handler_getCertificates():
 
 	# Create 3 requests to CA
 	serial = int(nodeInfo["id"][1::])
-	print "SERIAL: " + str(serial)
+	print "CERTIFICATE SERIAL: " + str(serial)
 	
 	req = []
 	for i in range(1,4):
@@ -335,7 +336,7 @@ def handler_getCertificates():
 
 	# Obtain response
 	response = dict(json.loads(r.text))
-	pretty_print('B', response)
+	#pretty_print('B', response)
 
 	dump_ca_cert = response['ca_cert']
 	fp = open("ca.cert", "w+")
@@ -343,11 +344,12 @@ def handler_getCertificates():
 	fp.close()		
 
 	dump_certs = response['certs']
-	pretty_print('D', dump_certs)
+	#pretty_print('D', dump_certs)
 	for i in range(0,3):
 		fp = open("player-" + str(i+1) + ".cert", "w+")
-		fp.write(dump_certs[i])
+		fp.write(dump_certs[i].encode('ascii'))
 		fp.close()
+		print dump_certs[i].encode('ascii')
 
 	print "<< CERTIFICATES GENERATED >>"
 	global certificate_gen
@@ -357,17 +359,15 @@ def handler_getCertificates():
 
 @app.route('/generateKeys/<string:orqId>/<int:keyId>', methods=['POST'])
 def handler_generateKeys(orqId,keyId):
-	# Check json has 3 servers and MPC communication port
-	print "NODEINFO & NETWORKLIST:::::"
-	print nodeInfo_gen
-	print networkList_gen
-
 	if not request.json:
 		abort(400)
 	if nodeInfo_gen != True or networkList_gen != True or certificate_gen != True:
 		abort(503)
 
 	pretty_print('*', 'generateKey method')
+
+	print request
+	print request.json
 	
 	config_data = load_config_files()
 	nodeInfo = config_data[0]
