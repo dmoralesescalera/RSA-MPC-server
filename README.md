@@ -22,7 +22,7 @@ A client example has been developed, for certificate signing operations with the
 ## Working Instructions
 
 1. Create network:
-  **> docker network create --subnet 10.10.10.0/24 rsa-net**
+  - `**> docker network create --subnet 10.10.10.0/24 rsa-net**`
  
 2. (Optional - for changes in code) Re-build images:
   **> docker build -t node ./node**
