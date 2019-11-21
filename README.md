@@ -10,7 +10,7 @@ The objective of this contribution is to provide a test environment, wich can be
 
 ## Architecture
 
-![System Architecture Picture](https://github.com/dmoralesescalera/RSA-MPC-server/blob/master/pics/architecture.jpg)
+![System Architecture Picture](https://github.com/dmoralesescalera/RSA-MPC-server/blob/master/pics/architecture.jpg?s=200)
 
 The system architecure is built over three tiers. On top, there are the servers, with a flat design, meaning they do not develop the logic that make the system works. This is the orchestrator function, on second tier, which translate client requests and coordinates the servers.
 The servers use the information provided by orchestrator to start a MPC operation. Clients are thaught in abstract way, meaning they can perform any desired operation.
