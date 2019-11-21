@@ -22,22 +22,22 @@ A client example has been developed, for certificate signing operations with the
 ## Working Instructions
 
 1. Create network:
-  ### docker network create --subnet 10.10.10.0/24 rsa-net
+  **> docker network create --subnet 10.10.10.0/24 rsa-net**
  
 2. (Optional - for changes in code) Re-build images:
-  ### docker build -t node ./node
-  ### docker build -t orchestrator ./orchestrator
+  **> docker build -t node ./node**
+  **> docker build -t orchestrator ./orchestrator**
   
 3. Run compose file (scale can change between 3 and 9):
-  ### docker-compose up --scale node=5
+  **> docker-compose up --scale node=5**
   
 4. Configure nodes:
-  ### python config_nodes.py
+  **> python config_nodes.py**
   
 5. Launch client:
-  ### docker build -t client ./client
-  ### docker run -it --network rsa-net client
+  **> docker build -t client ./client**
+  **> docker run -it --network rsa-net client**
   
 6. Client actions:
-  ### python /certbuilder/client_newKey.py
-  ### python /certbuilder/client_buildCert.py keyId
+  **> python /certbuilder/client_newKey.py**
+  **> python /certbuilder/client_buildCert.py keyId**
