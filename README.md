@@ -34,6 +34,8 @@ A client example has been developed, for certificate signing operations with the
 4. Configure nodes: <br/>
   `python config_nodes.py`
   
+  ![](https://github.com/dmoralesescalera/RSA-MPC-server/blob/master/pics/config_nodes.gif)
+  
 5. Launch client: <br/>
   `docker build -t client ./client` <br/>
   `docker run -it --network rsa-net client`
